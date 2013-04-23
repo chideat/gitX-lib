@@ -1,28 +1,28 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <QStringList>
-#include <QMetaType>
-#include <QMap>
-#include <QMapIterator>
+
 #include <QVariant>
+#include <QByteArray>
+#include <QMap>
+#include <QMetaType>
 
 
-//using Map = QMap<QByteArray, QByteArray>;
+
 typedef QMap<QByteArray, QVariant> Map;
 Q_DECLARE_METATYPE(Map)
 
 /**
   * conv stringlist to string
   */
-auto listTJson = [](QStringList list)-> QString{
-    QString ret="[";
-    for(QString item: list) {
-        ret.append(QString("\"%1\",").arg(item));
-    }
-    ret.replace(ret.length() - 1, 1, QChar(']'));
-    return ret;
-};
+//auto listTJson = [](QStringList list)-> QString{
+//    QString ret="[";
+//    for(QString item: list) {
+//        ret.append(QString("\"%1\",").arg(item));
+//    }
+//    ret.replace(ret.length() - 1, 1, QChar(']'));
+//    return ret;
+//};
 
 /**
   * conv map to string

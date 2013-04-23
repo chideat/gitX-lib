@@ -134,7 +134,6 @@ public :
             // string to json
             QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
             QJsonObject data = doc.object();
-            
             for(QByteArray key : param.keys()) {
                 if(data.contains(QString(key))) {
                     param[key] = QVariant::fromValue(data[key].toString());
@@ -166,7 +165,7 @@ public :
     }
     
     
-protected:
+private:
     Http::Http *http;
     
 Q_SIGNALS:
