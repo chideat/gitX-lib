@@ -3,11 +3,13 @@ CONFIG += C++11
 
 
 HEADERS += \
-    github.h \
-    keyring.h
+    lib/github.h \
+    keyring.h \
+    lib/gitlab.h \
+    lib/http.h \
+    lib/utils.h
 
 SOURCES += \
-    github.cpp \
     main.cpp
 
 OTHER_FILES += \
