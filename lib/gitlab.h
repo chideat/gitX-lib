@@ -4,7 +4,6 @@
 #include <QMap>
 #include <QStringList>
 #include <QString>
-#include <functional>
 
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
@@ -17,15 +16,16 @@
 
 namespace GitLab {
 
-#define PREFIX "http://127.0.0.1/api/v3"
+#define VERSION "3"
+#define PREFIX "http://chideat.org/api/v" VERSION
 
 class User: public QObject {
     Q_OBJECT
 public:
     
     
+    
 protected:
-    QMap<QString, std::function<int(Map&)> handle;
     Http::Http *http;
 };
 
