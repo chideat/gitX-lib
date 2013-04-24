@@ -31,17 +31,107 @@ enum class STATUS {
 #define VERSION "3"
 #define PREFIX "http://chideat.org/api/v" VERSION
 
-class User: public QObject {
+class GitLab : public QObject {
     Q_OBJECT
-public:
+public :
+    bool hasToken(Map &param) {
+        if(param.contains("token"))
+            return true;
+        else 
+            return false;
+    }
+
     
+    void replyAnalyize(QNetworkReply *reply, Map &param)  {
+        QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
+        QJsonObject data = doc.object();
+        
+        for(QByteArray key : param.keys()) {
+            if(data.contains(QString(key))) 
+                param[key] = data[key].toString();
+            else if(reply->rawHeaderList().contains(key)) 
+                param[key] = reply->rawHeader(key);
+        }
+    }
+
     
+    void status(Map &param, int val = 0) {
+        if(param.contains("_state")) 
+            param["_state_"] = val;
+        else
+            param["_state"] = val;
+    }
+
+    /**
+     * @brief check params in param
+     * @param list
+     */
+//    bool paramCheck(QStringList &list, Map &param) {
+//        for(QString &item : list) {
+            
+//        }
+//    }
     
 protected:
     Http::Http *http;
+Q_SIGNALS:
+    void finished();
 };
 
-class Session: public QObject {
+
+class Session: public GitLab {
+    Q_OBJECT
+public:
+    /**
+     * POST /session
+     * param
+     *         email
+     *         password
+     */
+    int login(Map &param) {
+        const QString route = "/session";
+        
+        if(!param.contains("email") || !param.contains("password")) {
+            param["_status"] = 1;
+            param["_message"] = "login email and password is need";
+            return 1;
+        }
+        
+        QJsonValue email(param["email"].toString());
+        QJsonValue password(param["password"].toString());
+        QJsonObject obj;
+        obj.insert("email", email);
+        obj.insert("password", password);
+        QJsonDocument data(obj);
+        
+        QNetworkRequest request(QUrl(QString("%1%2").arg(PREFIX).arg(route)));
+        
+        if(param.contains("contentTypeHeader")) 
+            request.setHeader(QNetworkRequest::ContentTypeHeader, param["contentTypeHeader"]);
+        else 
+            request.setHeader(QNetworkRequest::ContentTypeHeader, param.contains("application/json"));
+        
+        QNetworkReply *reply = http->POST(request, data.toJson());
+        
+        connect(reply, &QNetworkReply::finished, [&](){
+            int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+            
+            switch((STATUS)statusCode) {
+            case STATUS::CREATED:
+                replyAnalyize(reply, param);
+                status(param);
+                break;
+            default:
+                status(param, (int)statusCode);
+                break;
+            }
+            emit finished();
+            reply->deleteLater();
+        });
+    }
+};
+
+class User: public GitLab {
     Q_OBJECT 
     
 public:
@@ -187,23 +277,19 @@ public:
         connect(reply, &QNetworkReply::finished, [&](){
             int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
             
-            if(statusCode == (int)STATUS::CREATED) {
+            switch((STATUS)statusCode) {
+            case STATUS::CREATED:
                 replyAnalyize(reply, param);
-                status(param, 0);
-            }
-            else if(statusCode == (int)STATUS::CONFLICT) {
-               // param["title"] = 
+                status(param);
+                break;
+            default:
+                status(param, (int)statusCode);
+                break;
             }
             
+            emit finished();
             reply->deleteLater();
         });
-        
-
-
-        
-        
-        
-        
         return 0;
     }
     
@@ -230,37 +316,6 @@ public:
         
         return 0;
     }
-    
-    bool hasToken(Map &param) {
-        if(param.contains("token"))
-            return true;
-        else 
-            return false;
-    }
-
-    
-    void replyAnalyize(QNetworkReply *reply, Map &param)  {
-        QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
-        QJsonObject data = doc.object();
-        
-        for(QByteArray key : param.keys()) {
-            if(data.contains(QString(key))) 
-                param[key] = data[key].toString();
-            else if(reply->rawHeaderList().contains(key)) 
-                param[key] = reply->rawHeader(key);
-        }
-    }
-
-    
-    void status(Map &param, int val = 0) {
-        if(param.contains("_state")) 
-            param["_state_"] = val;
-        else
-            param["_state"] = val;
-    }
-
-protected:
-    Http::Http *http;
     
 };
 

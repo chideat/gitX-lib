@@ -7,7 +7,8 @@ HEADERS += \
     keyring.h \
     lib/gitlab.h \
     lib/http.h \
-    lib/utils.h
+    lib/utils.h \
+    lib/gitlabTest.h
 
 SOURCES += \
     main.cpp
