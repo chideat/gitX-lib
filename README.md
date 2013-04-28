@@ -1,10 +1,30 @@
-GitHub C++ Interface
-======================
+GitX lib C++ Interfaces
+=======================
 
-There are JS, Ruby, Python and other github libs, but no libs for c++/Qt
+This project contributes to the development of github and gitlab Interfaces based on qt.
 
-Content
---------
+
+GitHub API(v3)
+---------------
 * authorization
+* Activity
+* Gists
+* Git Data
+* Issues
+* Orgs
+* Pull Requests
 * repos
+* Users
 * search 
+
+
+GitLab API
+------------
+* Users
+* Session
+* Projects
+* Snippets
+* Repos
+* Issues
+* Milestones
+* Note: Wall
