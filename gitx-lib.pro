@@ -7,10 +7,14 @@ HEADERS += \
     keyring.h \
     lib/gitlab.h \
     lib/http.h \
-    lib/utils.h
+    lib/utils.h \
+    ui/window.h \
+    lib/gitlab/test.h \
+    lib/gitx.h
 
 SOURCES += \
-    main.cpp
+    main.cpp \
+    ui/window.cpp
 
 OTHER_FILES += \
     doc/spec.txt \

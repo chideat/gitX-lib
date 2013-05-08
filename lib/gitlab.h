@@ -28,20 +28,17 @@ enum class STATUS {
     SERVER_ERROR = 500                          /* while handling the request something went wrong on the server. */
 };
 
-#define VERSION "3"
-#define PREFIX "http://chideat.org/api/v" VERSION
+
+const QString VERSION{"3"};
+const QString PREFIX {"http://chideat.org/api/v" + VERSION};
 
 class GitLab : public QObject {
     Q_OBJECT
 public :
     bool hasToken(Map &param) {
-        if(param.contains("token"))
-            return true;
-        else 
-            return false;
+        return param.contains("token") ? true : false;
     }
 
-    
     void replyAnalyize(QNetworkReply *reply, Map &param)  {
         QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
         QJsonObject data = doc.object();
