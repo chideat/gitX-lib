@@ -13,6 +13,8 @@
 #include <QJsonArray>
 #include <QJsonValue>
 #include "http.h"
+#include <QDebug>
+
 
 namespace GitLab {
 
@@ -79,6 +81,10 @@ Q_SIGNALS:
 class Session: public GitLab {
     Q_OBJECT
 public:
+    Session(GitLab *parent = NULL){
+        http = new Http::Http(this);
+    }
+
     /**
      * POST /session
      * param
@@ -100,17 +106,19 @@ public:
         obj.insert("email", email);
         obj.insert("password", password);
         QJsonDocument data(obj);
-        
+
         QNetworkRequest request(QUrl(QString("%1%2").arg(PREFIX).arg(route)));
         
         if(param.contains("contentTypeHeader")) 
             request.setHeader(QNetworkRequest::ContentTypeHeader, param["contentTypeHeader"]);
         else 
-            request.setHeader(QNetworkRequest::ContentTypeHeader, param.contains("application/json"));
-        
+            request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
         QNetworkReply *reply = http->POST(request, data.toJson());
         
         connect(reply, &QNetworkReply::finished, [&](){
+            qDebug()<<reply->errorString();
+            qDebug()<<"here";
             int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
             
             switch((STATUS)statusCode) {
@@ -125,6 +133,8 @@ public:
             emit finished();
             reply->deleteLater();
         });
+        
+        return 0;
     }
 };
 

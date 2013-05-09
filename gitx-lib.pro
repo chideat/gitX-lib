@@ -10,11 +10,14 @@ HEADERS += \
     lib/utils.h \
     ui/window.h \
     lib/gitlab/test.h \
-    lib/gitx.h
+    lib/gitx.h \
+    lib/notification.h
 
 SOURCES += \
     main.cpp \
-    ui/window.cpp
+    ui/window.cpp \
+    lib/gitlab/test.cpp \
+    lib/notification.cpp
 
 OTHER_FILES += \
     doc/spec.txt \

@@ -8,13 +8,13 @@ class GitX : public QObject {
     Q_OBJECT
     
 public:
-    
+    GitX(QObject *parent = NULL):QObject(parent){}
 public Q_SLOTS:
     virtual bool login(Map &param) = 0;
     //virtual bool sshkey() = 0;
     virtual bool createSshKey(Map &param) = 0;
     virtual bool addSshKey(Map &param) = 0;
-    virtual bool createRepos(Map &param) = 0;
+    virtual bool createRepo(Map &param) = 0;
     virtual bool getRepos() = 0;
     
     virtual bool finished() = 0;
