@@ -12,7 +12,7 @@ public:
 public Q_SLOTS:
     virtual bool login(Map &param) = 0;
     //virtual bool sshkey() = 0;
-    virtual bool createSshKey(Map &param) = 0;
+    virtual QByteArray createSshKey(Map &param) = 0;
     virtual bool addSshKey(Map &param) = 0;
     virtual bool createRepo(Map &param) = 0;
     virtual bool getRepos() = 0;

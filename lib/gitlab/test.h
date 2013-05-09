@@ -7,6 +7,16 @@
 
 namespace Test {
 
+class User : public QObject {
+    Q_OBJECT
+public:
+    User(QObject *parent) : QObject(parent) {}
+    
+    bool setToken(Map &param);
+    bool setId(Map &param);
+};
+
+
 class TGitLab : public GitX {
     Q_OBJECT
 public:
@@ -14,7 +24,7 @@ public:
     ~TGitLab();
 public Q_SLOTS:
     bool login(Map &param);
-    bool createSshKey(Map &param);
+    QByteArray createSshKey(Map &param);
     bool addSshKey(Map &param);
     bool createRepo(Map &param);
     bool getRepos();
@@ -23,20 +33,18 @@ public Q_SLOTS:
     
     bool parse(Map &param) {}
     bool finished() {}
+    bool updateUser(Map &param);
+private Q_SLOTS:
+    QString getSercet();
+    bool setSercet(Map &param); 
     
 protected:
     GitLab::Session *session;
     GitLab::User *user;
     
-    QByteArray username;
-    QByteArray password;
-    QByteArray token;
+    User *currentUser;
     
 };
-
-
-
-
 
 
 }

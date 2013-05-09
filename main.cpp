@@ -11,9 +11,13 @@ int main(int argc, char **argv) {
     
     TGitLab gitlab;
     Map param;
+    //signin
     param.insert("email", "chinaxiahaifeng@gmail.com");
-    param.insert("password", "chinat123");
+    param.insert("password", "china123");
     gitlab.login(param);
+    
+    param.clear();
+
 
 
     return app.exec();

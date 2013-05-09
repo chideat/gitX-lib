@@ -53,6 +53,10 @@ public :
         return manager->post(request, data);
     }
     
+    QNetworkReply * PUT(QNetworkRequest &request, const QByteArray &data) {
+        return manager->put(request, data);
+    }
+    
     QNetworkReply * PATCH(QNetworkRequest &request, const QByteArray &data) {
         return manager->post(request, data);
     }
