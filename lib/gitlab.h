@@ -108,6 +108,7 @@ public:
         QJsonDocument data(obj);
 
         QNetworkRequest request(QUrl(QString("%1%2").arg(PREFIX).arg(route)));
+        qDebug()<<QString("%1%2").arg(PREFIX).arg(route)<< "    "<< data.toJson();
         
         if(param.contains("contentTypeHeader")) 
             request.setHeader(QNetworkRequest::ContentTypeHeader, param["contentTypeHeader"]);
@@ -116,9 +117,11 @@ public:
 
         QNetworkReply *reply = http->POST(request, data.toJson());
         
-        connect(reply, &QNetworkReply::finished, [&](){
-            qDebug()<<reply->errorString();
-            qDebug()<<"here";
+        connect(reply, &QNetworkReply::finished, [&, reply](){
+            if(reply == NULL) {
+                qDebug() << "reply is null";
+            }
+            
             int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
             
             switch((STATUS)statusCode) {
@@ -127,13 +130,14 @@ public:
                 status(param);
                 break;
             default:
-                status(param, (int)statusCode);
+                qDebug()<<"statusCode : "<<reply->errorString();
+                
+                //status(param, (int)statusCode);
                 break;
             }
             emit finished();
             reply->deleteLater();
         });
-        
         return 0;
     }
 };

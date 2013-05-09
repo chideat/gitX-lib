@@ -43,7 +43,9 @@ bool TGitLab::login(Map &param) {
     }
     else if(param.contains("email") && param.contains("password")) {
         //login in with email and password
-        connect(session, &GitLab::Session::finished, [&](){
+        session->login(param);
+        connect(session, &GitLab::Session::finished, [&param](){
+            qDebug()<<"finished123";
             // get token
             if(param.contains("_status_") && param["_status_"] == 1) {
                 //_notify(QString("Gitlab Login"), Notification::Error, QString("login failed"));
@@ -56,7 +58,6 @@ bool TGitLab::login(Map &param) {
                 qDebug()<<param["token"];
             }
         });
-        session->login(param);
     }
     return true;
 }
