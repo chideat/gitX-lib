@@ -37,12 +37,13 @@ const QString PREFIX {"http://chideat.org/api/v" + VERSION};
 class GitLab : public QObject {
     Q_OBJECT
 public :
-    bool hasToken(Map &param) {
+    bool hasToken(const Json &param) {
         return param.contains("private_token") ? true : false;
     }
 
-    void replyAnalyize(QNetworkReply *reply, Map &param)  {
-        param.insert("result", reply->readAll());
+    void replyAnalyize(QNetworkReply *reply, Json &result)  {
+        QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
+        result = doc.object();
     }
 
     /**
@@ -58,7 +59,8 @@ public :
 protected:
     Http::Http *http;
 Q_SIGNALS:
-    void finished(Map &result);
+    void finished(const QString &id, const Json &data, int state = 0, const QString &message = QString());
+    void finished(const QString &id, int state = 0, const QString &message = QString());
 };
 
 
@@ -75,49 +77,32 @@ public:
      *         email
      *         password
      */
-    int login(Map &param) {
-        const QString route = "/session";
+    bool login(Json &param) {
+        const QString id {"session-login"};
+        const QString route { "/session"};
         
         if(!param.contains("email") || !param.contains("password")) {
-            param["status"] = 1;
-            param["message"] = "login email and password is need";
-            return 1;
+            throw std::runtime_error("login email and password is need");
         }
         
-        QJsonValue email(param["email"].toString());
-        QJsonValue password(param["password"].toString());
-        QJsonObject obj;
-        obj.insert("email", email);
-        obj.insert("password", password);
-        QJsonDocument data(obj);
-        
         QNetworkRequest request(QUrl(QString("%1%2").arg(PREFIX).arg(route)));
-        
-        if(param.contains("contentTypeHeader")) 
-            request.setHeader(QNetworkRequest::ContentTypeHeader, param["contentTypeHeader"]);
-        else 
-            request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
+        QJsonDocument data(param);
         QNetworkReply *reply = http->POST(request, data.toJson());
         
-        connect(reply, &QNetworkReply::finished, [this, reply](){
-            Map result;
-            result.insert("id", "session-login");
-            if(reply == NULL) {
-                qDebug() << "reply is null";
-            }
-            
+        connect(reply, &QNetworkReply::finished, [this, reply, id](){
             int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
             switch((STATUS)statusCode) {
             case STATUS::CREATED:
+                Json result;
                 replyAnalyize(reply, result);
-                result["state"] = 0;
+                emit finished(id, result, 0);
                 break;
             default:
-                result["state"] = 1;
+                emit finished(id, 1, reply->errorString());
                 break;
             }
-            emit finished(result);
             reply->deleteLater();
         });
         return 0;
@@ -181,63 +166,49 @@ public:
       *        password
       *        projects_limit
       */
-    int updateUser(Map &param) {
+    bool updateUser(Json &param, QByteArray token) {
+        const QString id="user-updateUser";
+        
         if(!param.contains("id")) {
-            param["state"] = 1;
-            param["message"] = "user id is need";
-            return 1;
+            throw std::runtime_error("user id is needed");
         }
-        const QString route = QString("/usrs/%1").arg(param["id"].toString());
+        const QString route = QString("/users/%1").arg(param["id"].toString());
         
-        if(!hasToken(param)) {
-            param["state"] = 1;
-            param["message"] = "token id is need";
-            return 1;
-        }
-        if(param.keys().length() <= 2) {
-            param["state"] = 0;
-            return 0;
+        if(token.isNull() || token.isEmpty()) {
+            if(!param.contains("private_token"))
+                throw std::runtime_error("private token must provided");
+            else {
+                token = param["private_token"].toString().toLatin1();
+                param.remove("private_token");
+            }
         }
         
-        QJsonObject obj;
-        for(QByteArray key : param.keys()) {
-            QJsonValue value(param[key].toString());
-            obj.insert(key, value);
-        }
-        QJsonDocument data(obj);
+        if(param.keys().length() <= 2)
+            return true;
         
         QNetworkRequest request(QUrl(QString("%1%2").arg(PREFIX).arg(route)));
-        
-        if(param.contains("contentTypeHeader")) 
-            request.setHeader(QNetworkRequest::ContentTypeHeader, param["contentTypeHeader"]);
-        else 
-            request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-        
-        request.setRawHeader("PRIVATE-TOKEN", param["token"].toByteArray());
-        
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+        request.setRawHeader("PRIVATE-TOKEN", token);
+
+        QJsonDocument data(param);
         QNetworkReply *reply = http->PUT(request, data.toJson());
         
-        connect(reply, &QNetworkReply::finished, [this, reply](){
-            Map result;
-            result.insert("id","user-update");
-            
+        connect(reply, &QNetworkReply::finished, [this, reply, id](){
             int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-            
+
             switch((STATUS)statusCode) {
             case STATUS::OK:
+                Json result;
                 replyAnalyize(reply, result);
-                result["state"] = 0;
+                emit finished(id, result, 0);
                 break;
             case STATUS::UNAUTHORIZED:
-                result["state"] = 1;
-                result["message"] = "not authorized";
+                emit finished(id, 1, reply->errorString());
             default:
-                result["state"] = 1;
-                result["message"] = reply->errorString();
+                emit finished(id, 1, reply->errorString());
                 break;
             }
             
-            emit finished(result);
             reply->deleteLater();
         });
         
@@ -296,65 +267,49 @@ public:
       *         title
       *         key
       */
-    int addKey(Map &param) {
-        const QString route = "/user/keys";
+    int addKey(Json &param, QByteArray token) {
+        const QString id{"user-addkey"};
+        const QString route {"/user/keys"};
         if(!param.contains("key")) {
-            param["status"] = 1;
-            param["message"] = "a public key is needed";
-            return 1;
+            throw std::runtime_error("a public key is needed");
         }
-        if(!hasToken(param)) {
-            param["status"] = 1;
-            param["message"] = "private token must provided";
-            return 2;
+        if(token.isNull() || token.isEmpty()) {
+            if(!param.contains("private_token"))
+                throw std::runtime_error("private token must provided");
+            else {
+                token = param["private_token"].toString().toLatin1();
+                param.remove("private_token");
+            }
         }
         
-        if(!param.contains("title")) 
-            param["title"] = "gitlab";
+        if(!param.contains("title")) { 
+            QJsonValue title{"Qt5 gitlab lib"};
+            param.insert("title", title);
+        }
 
-        QJsonValue title(param["title"].toString());
-        QJsonValue key(param["key"].toString());
-        QJsonObject obj;
-        obj.insert("title", title);
-        obj.insert("key", key);
-        QJsonDocument data(obj);
-        
         QNetworkRequest request(QUrl(QString("%1%2").arg(PREFIX).arg(route)));
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+        request.setRawHeader("PRIVATE-TOKEN", token);
         
-        if(param.contains("contentTypeHeader")) 
-            request.setHeader(QNetworkRequest::ContentTypeHeader, param["contentTypeHeader"]);
-        else 
-            request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-        
-        request.setRawHeader("PRIVATE-TOKEN", param["token"].toByteArray());
-        
+        QJsonDocument data(obj);
         QNetworkReply *reply = http->POST(request, data.toJson());
 
-        connect(reply, &QNetworkReply::finished, [this, reply](){
-            Map result;
-            result.insert("id","user-addkey");
-            
+        connect(reply, &QNetworkReply::finished, [this, reply, id](){
             int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-            
             switch((STATUS)statusCode) {
             case STATUS::CREATED:
                 //replyAnalyize(reply, result);
-                result["state"] = 0;
+                emit finished(id, 0, "");
                 break;
             case STATUS::NOT_FOUND :
-                result["state"] = 1;
-                result["message"] = "this key has exists";
+                emit finished(id, 1, "this key has exists");
                 break;
             case STATUS::UNAUTHORIZED:
-                result["state"] = 1;
-                result["message"] = "not authorized";
+                emit finished(id, 1, "not authorized");
             default:
-                result["state"] = 1;
-                result["message"] = reply->errorString();
+                emit finished(id, 1, reply->errorString());
                 break;
             }
-            
-            emit finished(result);
             reply->deleteLater();
         });
         return 0;

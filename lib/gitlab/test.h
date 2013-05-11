@@ -10,10 +10,17 @@ namespace Test {
 class User : public QObject {
     Q_OBJECT
 public:
-    User(QObject *parent) : QObject(parent) {}
+    User(const QByteArray &&info, QObject *parent = NULL) : QObject(parent) {
+        QJsonDocument doc = QJsonDocument::fromJson(info);
+        data = doc.object();
+    }
+public Q_SLOTS:
     
     bool setToken(Map &param);
     bool setId(Map &param);
+    bool temp(Map &param, const QString &key);
+protected:
+    QJsonObject data;
 };
 
 

@@ -12,6 +12,8 @@
 typedef QMap<QByteArray, QVariant> Map;
 Q_DECLARE_METATYPE(Map)
 
+typedef QJsonObject Json;
+
 /**
   * conv stringlist to string
   */

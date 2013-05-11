@@ -13,8 +13,6 @@ TGitLab::TGitLab(GitX *parent):GitX(parent) {
     try{
         session = new GitLab::Session;
         user = new GitLab::User;
-        currentUser = new User(this);
-        
     }
     catch(const std::exception &e) {
         //_notify(QString("Gitlab Login"), Notification::Error, QString(e.what()));
@@ -57,20 +55,24 @@ bool TGitLab::login(Map &param) {
             else {
                 qDebug()<<result["status"].toInt();
             }
-            QJsonDocument doc = QJsonDocument::fromJson(result["result"].toByteArray());
-            QJsonObject obj(doc.object());
-            for(QString key: obj.keys()) {
-                QVariant val(obj[key].toString());
-                currentUser->setProperty(key.toLatin1().data(), val);
-            }
+            
+            currentUser = new User(result["result"].toByteArray(), this);
+
             
             
             qDebug()<<result["result"].toByteArray();
             
             Map param;
+            /*
             //add ssh key
             param.insert("title", "gitlab");
             addSshKey(param);
+            */
+            
+            // update user
+            param.insert("name", "china12345");
+            updateUser(param);
+            
         });
     }
     return true;
@@ -122,13 +124,15 @@ bool TGitLab::addSshKey(Map &param){
 }
 
 bool TGitLab::updateUser(Map &param) {
+    qDebug()<<"here";
     if(param.isEmpty()) 
         return true;
     currentUser->setToken(param);
     currentUser->setId(param);
     
     connect(user, &GitLab::User::finished, [this](Map &result) {
-        if(!result.contains("id") || !result["id"] != "user-updateUser") 
+        qDebug()<<"here";
+        if(!result.contains("id") || result["id"] != "user-updateUser") 
             return ;
         //update user info
         if(!result.contains("result"))
@@ -140,6 +144,7 @@ bool TGitLab::updateUser(Map &param) {
             currentUser->setProperty(key.toLatin1().data(), val);
         }
     });
+    user->updateUser(param);
 }
 
 bool TGitLab::createRepo(Map &param){}
@@ -156,21 +161,33 @@ bool TGitLab::setSercet(Map &param) {
     
 }
 
-
-bool User::setToken(Map &param) {
-    const QString key = "private_token";
-    if(!currentUser->property(key).isNull()) {
-        param.insert(key, currentUser->property(key).toString());
+bool User::temp(Map &param, const QString &key) {
+    if(data.contains(key)) {
+        if(data[key].isBool()) {
+            param.insert(key.toLatin1(), data[key].toBool());
+        }
+        else if(data[key].isDouble()) {
+            param.insert(key.toLatin1(), data[key].toDouble());
+        }
+        else  {
+            param.insert(key.toLatin1(), data[key].toString());
+        } 
+        
+        qDebug() << param[key.toLatin1()];
         return true;
     }
-    return false;
+    throw std::runtime_error(QString("key %1 doesn't exists").arg(key).toStdString());
+}
+
+
+bool User::setToken(Map &param) {
+    const QString key{"private_token"};
+    temp(param, key);
 }
 
 bool User::setId(Map &param) {
-    const QString key = "id";
-    if(!currentUser->property(key).isNull()) {
-        param.insert(key, currentUser->property(key).toString());
-        return true;
-    }
-    return false;
+    const QString key {"id"};
+    temp(param, key);
+    //qApp->exit();
 }
+
