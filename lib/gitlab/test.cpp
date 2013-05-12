@@ -19,6 +19,38 @@ TGitLab::TGitLab(GitX *parent):GitX(parent) {
         qDebug()<<e.what();
         qApp->quit();
     }
+    
+    connect(session, &GitLab::Session::finished, [this](QString &id, ){
+        if(!result.contains("id") || result["id"] != "session-login")
+            return ;
+        // get token
+        if(result.contains("status") && result["status"] == 1) {
+            //_notify(QString("Gitlab Login"), Notification::Error, QString("login failed"));
+            qDebug()<<"login failed";
+        }
+        else {
+            qDebug()<<result["status"].toInt();
+        }
+        
+        currentUser = new User(result["result"].toByteArray(), this);
+
+        
+        
+        qDebug()<<result["result"].toByteArray();
+        
+        Map param;
+        /*
+        //add ssh key
+        param.insert("title", "gitlab");
+        addSshKey(param);
+        */
+        
+        // update user
+        param.insert("name", "china12345");
+        updateUser(param);
+        
+    });
+    
 }
 
 TGitLab::~TGitLab() {
@@ -31,7 +63,7 @@ TGitLab::~TGitLab() {
  * @param param {email, password}
  * @return 
  */
-bool TGitLab::login(Map &param) {
+bool TGitLab::login(Json &param) {
     // use saved token to automatically sign in
     if(param.isEmpty()) {
         // get tokens or password and email from storage
@@ -44,36 +76,7 @@ bool TGitLab::login(Map &param) {
         //login in with email and password
         session->login(param);
         
-        connect(session, &GitLab::Session::finished, [this](Map &result){
-            if(!result.contains("id") || result["id"] != "session-login")
-                return ;
-            // get token
-            if(result.contains("status") && result["status"] == 1) {
-                //_notify(QString("Gitlab Login"), Notification::Error, QString("login failed"));
-                qDebug()<<"login failed";
-            }
-            else {
-                qDebug()<<result["status"].toInt();
-            }
-            
-            currentUser = new User(result["result"].toByteArray(), this);
-
-            
-            
-            qDebug()<<result["result"].toByteArray();
-            
-            Map param;
-            /*
-            //add ssh key
-            param.insert("title", "gitlab");
-            addSshKey(param);
-            */
-            
-            // update user
-            param.insert("name", "china12345");
-            updateUser(param);
-            
-        });
+        
     }
     return true;
 }

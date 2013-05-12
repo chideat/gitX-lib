@@ -30,7 +30,7 @@ public:
     TGitLab(GitX *parent = NULL);
     ~TGitLab();
 public Q_SLOTS:
-    bool login(Map &param);
+    bool login(Json &param);
     QByteArray createSshKey(Map &param);
     bool addSshKey(Map &param);
     bool createRepo(Map &param);

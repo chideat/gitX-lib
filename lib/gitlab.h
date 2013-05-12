@@ -92,10 +92,10 @@ public:
         QNetworkReply *reply = http->POST(request, data.toJson());
         
         connect(reply, &QNetworkReply::finished, [this, reply, id](){
+            Json result;
             int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
             switch((STATUS)statusCode) {
             case STATUS::CREATED:
-                Json result;
                 replyAnalyize(reply, result);
                 emit finished(id, result, 0);
                 break;
@@ -195,10 +195,10 @@ public:
         
         connect(reply, &QNetworkReply::finished, [this, reply, id](){
             int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-
+            
+            Json result;
             switch((STATUS)statusCode) {
             case STATUS::OK:
-                Json result;
                 replyAnalyize(reply, result);
                 emit finished(id, result, 0);
                 break;
@@ -283,7 +283,7 @@ public:
         }
         
         if(!param.contains("title")) { 
-            QJsonValue title{"Qt5 gitlab lib"};
+            QJsonValue title(QString("Qt5 gitlab lib"));
             param.insert("title", title);
         }
 
@@ -291,7 +291,7 @@ public:
         request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
         request.setRawHeader("PRIVATE-TOKEN", token);
         
-        QJsonDocument data(obj);
+        QJsonDocument data(param);
         QNetworkReply *reply = http->POST(request, data.toJson());
 
         connect(reply, &QNetworkReply::finished, [this, reply, id](){
