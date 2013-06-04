@@ -15,6 +15,11 @@ Q_DECLARE_METATYPE(Map)
 typedef QJsonObject Json;
 
 /**
+  * std error
+  */
+
+
+/**
   * conv stringlist to string
   */
 //auto listTJson = [](QStringList list)-> QString{

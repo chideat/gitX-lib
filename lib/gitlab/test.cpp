@@ -20,7 +20,11 @@ TGitLab::TGitLab(GitX *parent):GitX(parent) {
         qApp->quit();
     }
     
-    connect(session, &GitLab::Session::finished, [this](QString &id, ){
+    /**
+    void finished(const QString &id, const Json &data, int state = 0, const QString &message = QString());
+    void finished(const QString &id, int state = 0, const QString &message = QString());
+      */
+    connect(session, &GitLab::Session::finished, [this](QString &id, const Json &data, int state, const QString &message){
         if(!result.contains("id") || result["id"] != "session-login")
             return ;
         // get token
@@ -63,7 +67,7 @@ TGitLab::~TGitLab() {
  * @param param {email, password}
  * @return 
  */
-bool TGitLab::login(Json &param) {
+bool TGitLab::login(Map &param) {
     // use saved token to automatically sign in
     if(param.isEmpty()) {
         // get tokens or password and email from storage
@@ -74,6 +78,7 @@ bool TGitLab::login(Json &param) {
     }
     else if(param.contains("email") && param.contains("password")) {
         //login in with email and password
+        
         session->login(param);
         
         

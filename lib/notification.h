@@ -4,6 +4,7 @@
 #include <QStringList>
 #include <QMap>
 #include <QVariant>
+#include <iostream>
 
 class Notification : public QObject {
     Q_OBJECT
@@ -39,6 +40,10 @@ public:
                                QStringList actions = QStringList(), 
                                QMap<QString, QVariant> hint = QMap<QString, QVariant>(), 
                                int timeout = -1);
+    
+    static void debuger(QString name) {
+        std::cerr<<"[github-info] "<< name<<std::endl;
+    }
 };
 
 #define _notify Notification::notify

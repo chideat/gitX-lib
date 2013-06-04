@@ -11,7 +11,8 @@ HEADERS += \
     ui/window.h \
     lib/gitlab/test.h \
     lib/gitx.h \
-    lib/notification.h
+    lib/notification.h \
+    lib/gitlab/log.h
 
 SOURCES += \
     main.cpp \

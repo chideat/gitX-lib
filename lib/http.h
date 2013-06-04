@@ -10,6 +10,11 @@
 
 #include "utils.h"
 
+/**
+ *  Http module design
+ *  
+ */
+
 namespace Http {
 
 class Http : public QObject {
@@ -24,21 +29,6 @@ public :
     
     Http(QObject *parent = NULL):QObject(parent) {
         manager = new QNetworkAccessManager(parent);
-//        // trans signals
-//        connect(manager, &QNetworkAccessManager::finished, [](QNetworkReply *reply){
-//            QNetworkReply *reply;
-//            QMap<QString, QVariant> ret;
-//            // here need to convert string to json
-//            ret["data"] = reply->readAll();
-            
-//            for(QByteArray name: reply->rawHeaderList() ) {
-//                if(!(reply->rawHeader(name).isNull() || reply->rawHeader(name).isEmpty())) {
-//                    ret[QString(name)] = reply->rawHeader(name);
-//                }
-//            }
-//            emit finished(ret);
-//            reply->deleteLater();
-//        });
     }
     
     ~Http(){
@@ -67,8 +57,6 @@ public :
     
 protected :
     QNetworkAccessManager * manager;
-Q_SIGNALS:
-//    void finished(QMap<QString, QVariant> ret);
 };
 
 }

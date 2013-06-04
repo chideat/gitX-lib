@@ -4,7 +4,7 @@
 #include <QMap>
 #include <QStringList>
 #include <QString>
-#include <functional>
+#include <QDateTime>
 
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
@@ -14,12 +14,16 @@
 #include <QJsonArray>
 #include <QJsonValue>
 
+#include <system_error>
+
 #include "http.h"
 
 namespace GitHub {
 
-const QString VERSION {"3.0.0"};
-const QString PREFIX {"https://api.github.com"};
+const QByteArray VERSION {"3.0.0"};
+const QByteArray PREFIX {"https://api.github.com"};
+
+static Http::Http *http = new Http::Http;
 
 class User : public QObject {
     Q_OBJECT
@@ -29,9 +33,17 @@ public :
         OAUTH
     };
     
+    enum class ID:char {
+        CREATE_KEY,
+        UPDATE_KEY,
+        DELETE_KEY
+    };
+    
     User(QObject * parent = NULL): QObject(parent) {
         http = new Http::Http(this);
     }
+    
+    static QByteArray message;
     
     int get (Map &param) {
         QString route = "/user/keys/:id";
@@ -100,22 +112,21 @@ public :
       *        title
       *        key
       *        username
-      *        passwd
+      *        password
       * 
       *  steps:
       *    checkout if this ssh has added to github 
       *        on linux, /home/user/.ssh/id_rsa.pub
       */
     int createKey (Map &param) {
-        QString route = "/user/keys";
+        const QString route = "/user/keys";
         //param check
-        if(!param.contains("username") || !param.contains("passwd") || !param.contains("key")) {
-            param["_state"] = 1;
-            param["_message"] = "username or password is needed";
-            return 1;
+        if(!param.contains("username") || !param.contains("password") || !param.contains("key")) {
+            throw std::system_error(std::make_error_code(std::errc::invalid_argument), "username or password is needed");
         }
+        // set key
         if(!param.contains("title")) {
-            param["title"] = "GitHub lib base on qt";
+            param["title"] = "cloudSync-" + QDateTime.currentDateTime().toString("yyyy-MM-dd");
         }
         
         QJsonValue title(param["title"].toString());
@@ -167,10 +178,17 @@ public :
     
 private:
     Http::Http *http;
+    static QByteArray username;
+    static QByteArray token;
     
+    friend class Authorization;
 Q_SIGNALS:
-    void finished();
+    void finished(QByteArray id);
 };
+
+// init
+QByteArray User::username = "";
+QByteArray User::token = "";
 
 
 class Authorization : public QObject {
